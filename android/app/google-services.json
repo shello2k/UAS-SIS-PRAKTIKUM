@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "281076734424",
+    "project_id": "neynote-ab1cc",
+    "storage_bucket": "neynote-ab1cc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:281076734424:android:df7523d5db0881008d7aad",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCNi5iwtwKOmwjZjJmQjNFj67Yc2hImEto"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
