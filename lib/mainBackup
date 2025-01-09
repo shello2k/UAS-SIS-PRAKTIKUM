@@ -1,0 +1,538 @@
+import 'package:flutter/material.dart';
+import 'package:device_preview/device_preview.dart';
+import 'package:flutter/foundation.dart';
+
+void main() {
+  runApp(
+    DevicePreview(
+      enabled: !kReleaseMode,
+      builder: (context) => MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Top section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.green,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Welcome,',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Muhammad Thoriq Aziz',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 20),
+                Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        'Your Balance',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Rp 1.925.000',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Search and Sort section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search Transactions...',
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onChanged: (value) {
+                      // Implement search logic here
+                    },
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.sort, size: 24),
+                  onPressed: () {
+                    // Implement sort action here
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          // Filter buttons
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                FilterButton(label: 'All', isSelected: true),
+                FilterButton(label: 'Income', isSelected: false, icon: Icons.arrow_downward, color: Colors.green),
+                FilterButton(label: 'Expense', isSelected: false, icon: Icons.arrow_upward, color: Colors.red),
+              ],
+            ),
+          ),
+
+        
+
+          // Transactions list
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              children: [
+                TransactionSection(
+                  title: 'Today',
+                  transactions: [
+                    TransactionItem(
+                      icon: Icons.fastfood,
+                      name: 'Nasi Lemak',
+                      description: 'Nasi Lemak bapa budi',
+                      amount: '-Rp 50.000',
+                      isExpense: true,
+                    ),
+                    TransactionItem(
+                      icon: Icons.local_cafe,
+                      name: 'Kopi',
+                      description: 'Morgy Caffee',
+                      amount: '-Rp 25.000',
+                      isExpense: true,
+                    ),
+                  ],
+                ),
+                TransactionSection(
+                  title: 'Yesterday',
+                  transactions: [
+                    TransactionItem(
+                      icon: Icons.attach_money,
+                      name: 'Gaji',
+                      description: 'Payment freelance',
+                      amount: '+Rp 2.000.000',
+                      isExpense: false,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showAddTransactionDialog(context);
+        },
+        child: Icon(Icons.add, size: 30),
+        backgroundColor: Colors.green,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
+  }
+
+  void _showAddTransactionDialog(BuildContext context) {
+  final _formKey = GlobalKey<FormState>();
+  TextEditingController nameController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
+  TextEditingController amountController = TextEditingController();
+  String selectedType = 'Expense'; // Default to 'Expense'
+  String selectedCategory = 'Consumables'; // Default to 'Consumables'
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text("Add Transaction"),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: selectedCategory,
+                decoration: InputDecoration(labelText: 'Category'),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    selectedCategory = newValue;
+                  }
+                },
+                items: <String>['Consumables', 'Shopping', 'Transfer']
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                validator: (value) {
+                  if (value == null) {
+                    return 'Please select a category';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: 'Name'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a name';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: descriptionController,
+                decoration: InputDecoration(labelText: 'Description'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a description';
+                  }
+                  return null;
+                },
+              ),
+              // Dropdown for income or expense
+              DropdownButtonFormField<String>(
+                value: selectedType,
+                decoration: InputDecoration(labelText: 'Type'),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    selectedType = newValue;
+                  }
+                },
+                items: <String>['Income', 'Expense']
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                validator: (value) {
+                  if (value == null) {
+                    return 'Please select a transaction type';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: amountController,
+                decoration: InputDecoration(labelText: 'Amount'),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter an amount';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                // Logic to save the new transaction
+                Navigator.pop(context);
+              }
+            },
+            child: Text('Add'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Cancel'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+}
+
+class FilterButton extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final IconData? icon;
+  final Color? color;
+
+  FilterButton({required this.label, this.isSelected = false, this.icon, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isSelected ? Colors.grey[200] : Colors.white,
+        foregroundColor: Colors.black,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: 0,
+      ),
+      onPressed: () {},
+      child: Row(
+        children: [
+          if (icon != null) Icon(icon, color: color, size: 18),
+          if (icon != null) SizedBox(width: 4),
+          Text(label),
+        ],
+      ),
+    );
+  }
+}
+
+class TransactionSection extends StatelessWidget {
+  final String title;
+  final List<TransactionItem> transactions;
+
+  TransactionSection({required this.title, required this.transactions});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 10),
+          ...transactions.map((transaction) {
+            return GestureDetector(
+              onTap: () {
+                _showTransactionDialog(context, transaction);
+              },
+              child: transaction,
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  void _showTransactionDialog(BuildContext context, TransactionItem transaction) {
+    final _formKey = GlobalKey<FormState>();
+    TextEditingController nameController = TextEditingController(text: transaction.name);
+    TextEditingController descriptionController = TextEditingController(text: transaction.description);
+    TextEditingController amountController = TextEditingController(text: transaction.amount);
+    String selectedType = transaction.isExpense ? 'Expense' : 'Income';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Edit Transaction"),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  decoration: InputDecoration(labelText: 'Name'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a name';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: descriptionController,
+                  decoration: InputDecoration(labelText: 'Description'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a description';
+                    }
+                    return null;
+                  },
+                ),
+                // Dropdown for income or expense
+                DropdownButtonFormField<String>(
+                  value: selectedType,
+                  decoration: InputDecoration(labelText: 'Type'),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      selectedType = newValue;
+                    }
+                  },
+                  items: <String>['Income', 'Expense']
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Please select a transaction type';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: amountController,
+                  decoration: InputDecoration(labelText: 'Amount'),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter an amount';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  // Logic to save the edited transaction
+                  Navigator.pop(context);
+                }
+              },
+              child: Text('Save'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class TransactionItem extends StatelessWidget {
+  final IconData icon;
+  final String name;
+  final String description;
+  final String amount;
+  final bool isExpense;
+
+  TransactionItem({
+    required this.icon,
+    required this.name,
+    required this.description,
+    required this.amount,
+    required this.isExpense,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            blurRadius: 8,
+            spreadRadius: 4,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: isExpense ? Colors.red : Colors.green, size: 40),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  description,
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            amount,
+            style: TextStyle(
+              color: isExpense ? Colors.red : Colors.green,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
