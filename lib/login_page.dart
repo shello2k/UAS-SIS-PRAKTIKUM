@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_application_1/user_dashboard.dart';
+import 'package:flutter_application_1/main.dart';
+import 'package:flutter_application_1/register_page.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -9,22 +10,44 @@ class SignInPage extends StatefulWidget {
   _SignInPageState createState() => _SignInPageState();
 }
 
+final _auth = FirebaseAuth.instance;
+
 class _SignInPageState extends State<SignInPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _auth = FirebaseAuth.instance;
 
   bool _isPasswordVisible = false;
 
   Future<void> _signIn() async {
+    // Validasi input kosong
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: const Text('Email and password cannot be empty.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
       );
+      // Navigasi ke halaman utama setelah login sukses
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const UserDashboardPage()),
+        MaterialPageRoute(builder: (context) => MyApp()),
       );
     } on FirebaseAuthException catch (e) {
       String message = e.message ?? "An error occurred.";
@@ -49,73 +72,105 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'Let’s Sign you in.',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Welcome back\nYou’ve been missed!',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
-            ),
-            const SizedBox(height: 20),
-            Center(
-              child: Image.asset(
-                'assets/login_image.png',
-                height: 180,
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Username or Email',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Welcome Back!',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _isPasswordVisible = !_isPasswordVisible; 
-                    });
-                  },
                 ),
-              ),
-              obscureText: !_isPasswordVisible, 
+                SizedBox(height: 20),
+                Image.asset(
+                  'assets/login_image.png', // Ganti dengan path gambar Anda
+                  height: 150,
+                ),
+                SizedBox(height: 30),
+
+                TextField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    labelText: 'Enter Email Address',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+                TextField(
+                  controller: _passwordController,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                    ),
+                  ),
+                  obscureText: !_isPasswordVisible,
+                ),
+                const SizedBox(height: 10),
+
+                SizedBox(height: 30),
+                // Tombol Login
+                ElevatedButton(
+                  onPressed: _signIn,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                  child: const Text(
+                    'Login',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Not have an account? "),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => RegisterScreen()),
+                        );
+                      },
+                      child: const Text(
+                        'Register',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _signIn,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: const Text('Login'),
-            ),
-          ],
+          ),
         ),
       ),
     );
