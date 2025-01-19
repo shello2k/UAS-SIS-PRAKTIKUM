@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_application_1/firebase_options.dart';
 import 'package:flutter_application_1/landing_page.dart';
 import 'package:flutter_application_1/login_page.dart';
+import 'package:flutter_application_1/riwayat_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'restapi.dart';
 import 'model.dart';
@@ -76,7 +77,57 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomePage(),
+      home: AppPage(),
+    );
+  }
+}
+
+class AppPage extends StatefulWidget {
+  @override
+  _AppPageState createState() => _AppPageState();
+}
+
+class _AppPageState extends State<AppPage> {
+  int _currentIndex = 0;
+  final PageController _pageController = PageController();
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+    _pageController.jumpToPage(index);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        children: [
+          HomePage(),
+          HistoryPage(), // Buat halaman ini sesuai kebutuhan
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
+        currentIndex: _currentIndex,
+        onTap: _onItemTapped,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: 'History',
+          ),
+        ],
+      ),
     );
   }
 }
@@ -342,12 +393,15 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showAddTransactionDialog(context);
-        },
-        child: Icon(Icons.add, size: 30),
-        backgroundColor: Colors.green,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 0), // Atur jarak dari bawah
+        child: FloatingActionButton(
+          onPressed: () {
+            _showAddTransactionDialog(context);
+          },
+          child: Icon(Icons.add, size: 30),
+          backgroundColor: Colors.green,
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
