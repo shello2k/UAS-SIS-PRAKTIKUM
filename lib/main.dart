@@ -71,7 +71,8 @@ class SeekJobApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-        home: SignInPage(), debugShowCheckedModeBanner: false);
+        home: SignInPage(), 
+        debugShowCheckedModeBanner: false);
   }
 }
 
@@ -80,7 +81,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: AppPage(),
+      home: SplashScreen(),
     );
   }
 }
@@ -116,24 +117,63 @@ class _AppPageState extends State<AppPage> {
           HistoryPage(), // Buat halaman ini sesuai kebutuhan
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        currentIndex: _currentIndex,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'History',
-          ),
-        ],
-      ),
+      bottomNavigationBar: Container(  
+        height: 100, // Set the desired height here  
+        padding: const EdgeInsets.only(top: 0),
+        child: BottomNavigationBar(  
+          backgroundColor: Colors.white,  
+          currentIndex: _currentIndex,  
+          onTap: _onItemTapped,  
+          iconSize: 31.0, // Increase the icon size  
+          showSelectedLabels: false, // Hide selected labels  
+          showUnselectedLabels: false, // Hide unselected labels  
+          items: const [  
+            BottomNavigationBarItem(  
+              icon: Icon(Icons.home),  
+              label: '', // Keep this empty or remove it  
+            ),  
+            BottomNavigationBarItem(  
+              icon: Icon(Icons.history),  
+              label: '', // Keep this empty or remove it  
+            ),  
+          ],  
+        ),  
+      ),  
     );
   }
 }
+
+String formatRupiah(double amount) {  
+  // Format the number to two decimal places  
+  String formattedAmount = amount.toStringAsFixed(2);  
+    
+  // Split the amount into whole and decimal parts  
+  List<String> parts = formattedAmount.split('.');  
+  String wholePart = parts[0];  
+  String decimalPart = parts.length > 1 ? parts[1] : '00';  
+  
+  // Add thousand separators  
+  StringBuffer buffer = StringBuffer();  
+  for (int i = 0; i < wholePart.length; i++) {  
+    if (i > 0 && (wholePart.length - i) % 3 == 0) {  
+      buffer.write('.');  
+    }  
+    buffer.write(wholePart[i]);  
+  }  
+  
+  // Combine whole part and decimal part  
+  return 'Rp ${buffer.toString()},$decimalPart';  
+}  
+
+ String formatDate(String dateString) {  
+    try {  
+      DateTime dateTime = DateTime.parse(dateString);  
+      return DateFormat('dd MMMM yyyy').format(dateTime); // Format the date  
+    } catch (e) {  
+      print("Error formatting date: $e");  
+      return dateString; // Return the original string if formatting fails  
+    }  
+  }  
 
 class HomePage extends StatefulWidget {
   @override
@@ -150,7 +190,7 @@ class _HomePageState extends State<HomePage> {
   final String token = '6717db9aec5074ec8261d698'; // token
   final String project = 'uts-remedial'; //  project
   final String collection = 'keuangan'; // collection
-  final String appid = '677a97e3f853312de5509ec0'; // app ID
+  final String appid = '678d5a6a046a4332b414b79b'; // app ID
 
   double totalIncome = 0.0; // Track total income
   double totalExpense = 0.0; // Track total expenses
@@ -222,16 +262,18 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Top section
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: boxColor,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(20),
-                bottomRight: Radius.circular(20),
-              ),
-            ),
+          AnimatedContainer(  
+            duration: Duration(milliseconds: 500), // Duration of the animation  
+            curve: Curves.easeInOut, // Curve of the animation  
+            width: double.infinity,  
+            padding: const EdgeInsets.all(20),  
+            decoration: BoxDecoration(  
+              color: boxColor,  
+              borderRadius: const BorderRadius.only(  
+                bottomLeft: Radius.circular(20),  
+                bottomRight: Radius.circular(20),  
+              ),  
+            ),  
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -287,15 +329,15 @@ class _HomePageState extends State<HomePage> {
                           fontSize: 18,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Rp ${balance.toStringAsFixed(2)}', // Display the balance
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      const SizedBox(height: 8),  
+                      Text(  
+                        formatRupiah(balance), // Use the formatRupiah function  
+                        style: TextStyle(  
+                          color: Colors.white,  
+                          fontSize: 36,  
+                          fontWeight: FontWeight.bold,  
+                        ),  
+                      ), 
                     ],
                   ),
                 ),
@@ -401,7 +443,7 @@ class _HomePageState extends State<HomePage> {
 
       //add transaction button===================
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 0), // Atur jarak dari bawah
+        padding: const EdgeInsets.only(bottom: 15), // Atur jarak dari bawah
         child: FloatingActionButton(
           onPressed: () {
             _showAddTransactionDialog(context);
@@ -411,7 +453,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       //add button===================================
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
     );
   }
 
@@ -453,40 +495,43 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               // Content
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildDetailItem("Nama", transaction.name),
-                    SizedBox(height: 8),
-                    _buildDetailItem("Deskripsi", transaction.description),
-                    SizedBox(height: 8),
-                    _buildDetailItem("Type", transaction.type),
-                    SizedBox(height: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 10),
-                        if (transaction.picture != null)
-                          kIsWeb
-                              ? Image.network(transaction.picture!)
-                              : Image.file(
-                                  File(transaction.picture!),
-                                  height: 100,
-                                  width: 100,
-                                  fit: BoxFit.cover,
-                                ),
-                        if (transaction.picture == null)
-                          Text(
-                            'No image available',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+              Padding(  
+                padding: const EdgeInsets.all(16.0),  
+                child: Column(  
+                  crossAxisAlignment: CrossAxisAlignment.start,  
+                  children: [  
+                    _buildDetailItem("Nama", transaction.name),  
+                    SizedBox(height: 8),  
+                    _buildDetailItem("Tanggal", formatDate(transaction.date)), // Add date here  
+                    SizedBox(height: 8),  
+                    _buildDetailItem("Deskripsi", transaction.description),  
+                    SizedBox(height: 8),  
+                    _buildDetailItem("Type", transaction.type),  
+                    SizedBox(height: 8),  
+                    Column(  
+                      crossAxisAlignment: CrossAxisAlignment.start,  
+                      children: [  
+                        SizedBox(height: 10),  
+                        if (transaction.picture != null)  
+                          kIsWeb  
+                              ? Image.network(transaction.picture!)  
+                              : Image.file(  
+                                  File(transaction.picture!),  
+                                  height: 100,  
+                                  width: 100,  
+                                  fit: BoxFit.cover,  
+                                ),  
+                        if (transaction.picture == null)  
+                          Text(  
+                            'No image available',  
+                            style: TextStyle(color: Colors.grey),  
+                          ),  
+                      ],  
+                    ),  
+                  ],  
+                ),  
+              ),  
+
               // Action Buttons
               Padding(
                 padding:
@@ -912,87 +957,95 @@ class FilterButton extends StatelessWidget {
   }
 }
 
-//SARRAH SIDE =============================================
-class TransactionItemWidget extends StatelessWidget {
-  final KeuanganModel transaction;
-  final VoidCallback onTap;
-
-  TransactionItemWidget({required this.transaction, required this.onTap});
-
-  IconData getIconForCategory(String category) {
-    switch (category) {
-      case 'Consumables':
-        return Icons.fastfood; // Food icon
-      case 'Shopping':
-        return Icons.shopping_cart; // Shopping cart icon
-      case 'Transfer':
-        return Icons.transfer_within_a_station; // Transfer icon
-      default:
-        return Icons.attach_money; // Default money icon
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap, // Ensure the entire widget is tappable
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              blurRadius: 8,
-              spreadRadius: 4,
-            ),
-          ],
-        ),
-        //=====================================================================
-        child: Row(
-          children: [
-            Icon(
-              getIconForCategory(
-                  transaction.category), // Get the icon based on category
-              color: transaction.type == 'Expense' ? Colors.red : Colors.green,
-              size: 40,
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    transaction.name,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    transaction.description,
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Text(
-              transaction.amount,
-              style: TextStyle(
-                color:
-                    transaction.type == 'Expense' ? Colors.red : Colors.green,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        //======================================================
-      ),
-    );
-  }
-}
+class TransactionItemWidget extends StatelessWidget {  
+  final KeuanganModel transaction;  
+  final VoidCallback onTap;  
+  
+  TransactionItemWidget({required this.transaction, required this.onTap});  
+  
+  IconData getIconForCategory(String category) {  
+    switch (category) {  
+      case 'Consumables':  
+        return Icons.fastfood; // Food icon  
+      case 'Shopping':  
+        return Icons.shopping_cart; // Shopping cart icon  
+      case 'Transfer':  
+        return Icons.transfer_within_a_station; // Transfer icon  
+      default:  
+        return Icons.attach_money; // Default money icon  
+    }  
+  }  
+  
+  @override  
+  Widget build(BuildContext context) {  
+    return GestureDetector(  
+      onTap: onTap, // Ensure the entire widget is tappable  
+      child: Container(  
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),  
+        margin: const EdgeInsets.only(bottom: 12),  
+        decoration: BoxDecoration(  
+          color: Colors.white,  
+          borderRadius: BorderRadius.circular(15),  
+          boxShadow: [  
+            BoxShadow(  
+              color: Colors.grey.withOpacity(0.2),  
+              blurRadius: 8,  
+              spreadRadius: 4,  
+            ),  
+          ],  
+        ),  
+        child: Row(  
+          children: [  
+            Icon(  
+              getIconForCategory(transaction.category), // Get the icon based on category  
+              color: transaction.type == 'Expense' ? Colors.red : Colors.green,  
+              size: 40,  
+            ),  
+            SizedBox(width: 12),  
+            Expanded(  
+              child: Column(  
+                crossAxisAlignment: CrossAxisAlignment.start,  
+                children: [  
+                  Text(  
+                    transaction.name,  
+                    style: TextStyle(  
+                      fontWeight: FontWeight.bold,  
+                      fontSize: 16,  
+                    ),  
+                  ),  
+                  // Display the formatted date instead of the description  
+                  Text(  
+                    formatDate(transaction.date),  
+                    style: TextStyle(  
+                      color: Colors.grey,  
+                      fontSize: 14,  
+                    ),  
+                  ),  
+                ],  
+              ),  
+            ),  
+            // Safely parse the amount and format it  
+            Text(  
+              formatRupiah(_parseAmount(transaction.amount)), // Format the amount  
+              style: TextStyle(  
+                color: transaction.type == 'Expense' ? Colors.red : Colors.green,  
+                fontWeight: FontWeight.bold,  
+              ),  
+            ),  
+          ],  
+        ),  
+      ),  
+    );  
+  }  
+  
+  double _parseAmount(String amount) {  
+    try {  
+      // Remove any non-numeric characters except for '.' and '-'  
+      String sanitizedAmount = amount.replaceAll(RegExp(r'[^\d.-]'), '');  
+      return double.parse(sanitizedAmount);  
+    } catch (e) {  
+      print("Error parsing amount: $e");  
+      return 0.0; // Return 0.0 if parsing fails  
+    }  
+  }  
+}  

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';  
+
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -13,43 +15,57 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;  
+
 
   bool _isLoading = false;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
-  Future<void> _signUp() async {
-    if (_passwordController.text != _confirmPasswordController.text) {
-      _showErrorDialog('Passwords do not match.');
-      return;
-    }
 
-    setState(() {
-      _isLoading = true;
-    });
 
-    try {
-      UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+     Future<void> _signUp() async {  
+     if (_passwordController.text != _confirmPasswordController.text) {  
+       _showErrorDialog('Passwords do not match.');  
+       return;  
+     }  
+  
+     setState(() {  
+       _isLoading = true;  
+     });  
+  
+     try {  
+       UserCredential userCredential =  
+           await _auth.createUserWithEmailAndPassword(  
+         email: _emailController.text.trim(),  
+         password: _passwordController.text.trim(),  
+       );  
+  
+       // Update display name  
+       await userCredential.user?.updateDisplayName(_nameController.text.trim());  
+  
+       // Store user data in Firestore  
+       await _firestore.collection('users').doc(userCredential.user?.uid).set({  
+         'uid': userCredential.user?.uid,  
+         'name': _nameController.text.trim(),  
+         'email': _emailController.text.trim(),  
+       });  
+  
+       // Navigate to the login page  
+       Navigator.pushReplacement(  
+         context,  
+         MaterialPageRoute(builder: (context) => SignInPage()),  
+       );  
+     } on FirebaseAuthException catch (e) {  
+       String message = e.message ?? "An error occurred.";  
+       _showErrorDialog(message);  
+     } finally {  
+       setState(() {  
+         _isLoading = false;  
+       });  
+     }  
+   }  
 
-      await userCredential.user?.updateDisplayName(_nameController.text.trim());
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => SignInPage()),
-      );
-    } on FirebaseAuthException catch (e) {
-      String message = e.message ?? "An error occurred.";
-      _showErrorDialog(message);
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
 
   void _showErrorDialog(String message) {
     showDialog(
@@ -174,7 +190,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         child: const Text(
                           'Register',
-                          style: TextStyle(fontSize: 18.0),
+                          style: TextStyle(fontSize: 18.0, color: Colors.white),
                         ),
                       ),
                 const SizedBox(height: 15.0),
@@ -206,4 +222,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
+     @override  
+   void dispose() {  
+     _nameController.dispose();  
+     _emailController.dispose();  
+     _passwordController.dispose();  
+     _confirmPasswordController.dispose();  
+     super.dispose();  
+   }  
+
 }
