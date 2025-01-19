@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api, use_key_in_widget_constructors
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,6 +13,7 @@ import 'package:flutter_application_1/login_page.dart';
 import 'package:flutter_application_1/riwayat_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'restapi.dart';
+import 'package:intl/intl.dart';
 import 'model.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -57,7 +60,7 @@ void main() async {
   runApp(
     DevicePreview(
       enabled: !kReleaseMode,
-      builder: (context) => SeekJobApp(),
+      builder: (context) => MyApp(),
     ),
   );
 }
@@ -378,7 +381,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // Transactions list
+          // Transactions list ====================
           Expanded(
             child: ListView.builder(
               itemCount: filteredTransactions.length,
@@ -386,13 +389,17 @@ class _HomePageState extends State<HomePage> {
                 final transaction = filteredTransactions[index];
                 return TransactionItemWidget(
                   transaction: transaction,
-                  onTap: () => _showTransactionDialog(context, transaction),
+                  onTap: () =>
+                      _showDetailTransactionDialog(context, transaction),
                 );
               },
             ),
           ),
+          //transaction list ==================
         ],
       ),
+
+      //add transaction button===================
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 0), // Atur jarak dari bawah
         child: FloatingActionButton(
@@ -403,10 +410,174 @@ class _HomePageState extends State<HomePage> {
           backgroundColor: Colors.green,
         ),
       ),
+      //add button===================================
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
+  //POP UP DETAIL TRANSACTION ================================================
+  void _showDetailTransactionDialog(
+      BuildContext context, KeuanganModel transaction) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          contentPadding: EdgeInsets.zero,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 255, 255, 255),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(15),
+                    topRight: Radius.circular(15),
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    "Transaction Details",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDetailItem("Nama", transaction.name),
+                    SizedBox(height: 8),
+                    _buildDetailItem("Deskripsi", transaction.description),
+                    SizedBox(height: 8),
+                    _buildDetailItem("Type", transaction.type),
+                    SizedBox(height: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 10),
+                        if (transaction.picture != null)
+                          kIsWeb
+                              ? Image.network(transaction.picture!)
+                              : Image.file(
+                                  File(transaction.picture!),
+                                  height: 100,
+                                  width: 100,
+                                  fit: BoxFit.cover,
+                                ),
+                        if (transaction.picture == null)
+                          Text(
+                            'No image available',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Action Buttons
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Delete button
+                    IconButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: Text('Confirm Delete'),
+                              content: Text(
+                                  'Are you sure you want to delete this transaction?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(
+                                        context); // Kembali tanpa menghapus
+                                  },
+                                  child: Text('No'),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    // Menghapus data
+                                    await dataService.removeId(token, project,
+                                        collection, appid, transaction.id);
+                                    fetchTransactions(); // Refresh daftar transaksi
+                                    Navigator.pop(context); // Tutup dialog
+                                    Navigator.pop(
+                                        context); // Tutup popup detail
+                                  },
+                                  child: Text('Yes',
+                                      style: TextStyle(color: Colors.red)),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      icon: Icon(Icons.delete, color: Colors.red[900]),
+                    ),
+
+                    // Edit button
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _showEditTransactionDialog(context, transaction);
+                      },
+                      icon: Icon(Icons.edit, color: Colors.black),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailItem(String label, String value) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Text(
+            "$label: ",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  //POP UP DETAIL TRANSACTION ================================================
+
+//FORM POP UP ADD--------------------------------------------------
   void _showAddTransactionDialog(BuildContext context) {
     final _formKey = GlobalKey<FormState>();
     TextEditingController nameController = TextEditingController();
@@ -560,8 +731,11 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
+  //ADD
 
-  void _showTransactionDialog(BuildContext context, KeuanganModel transaction) {
+//POP UP EDIT TRANSACTION ========================
+  void _showEditTransactionDialog(
+      BuildContext context, KeuanganModel transaction) {
     final _formKey = GlobalKey<FormState>();
     TextEditingController nameController =
         TextEditingController(text: transaction.name);
@@ -575,6 +749,7 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: Text("Edit Transaction"),
           content: SingleChildScrollView(
             child: Form(
@@ -602,7 +777,6 @@ class _HomePageState extends State<HomePage> {
                       return null;
                     },
                   ),
-                  // Dropdown buat pengeluaran atau pemasukan
                   DropdownButtonFormField<String>(
                     value: selectedType,
                     decoration: InputDecoration(labelText: 'Type'),
@@ -636,7 +810,6 @@ class _HomePageState extends State<HomePage> {
                       return null;
                     },
                   ),
-                  // Display the image if it exists
                   if (transaction.picture != null &&
                       transaction.picture!.isNotEmpty)
                     Padding(
@@ -664,7 +837,6 @@ class _HomePageState extends State<HomePage> {
             TextButton(
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
-                  // nyimpen data yang di perbarui
                   await dataService.updateId('name', nameController.text, token,
                       project, collection, appid, transaction.id);
                   await dataService.updateId(
@@ -680,23 +852,16 @@ class _HomePageState extends State<HomePage> {
                   await dataService.updateId('type', selectedType, token,
                       project, collection, appid, transaction.id);
                   fetchTransactions(); // Refresh list
-                  Navigator.pop(context);
+                  Navigator.pop(context); // Tutup edit dialog
                 }
               },
               child: Text('Save'),
             ),
             TextButton(
-              onPressed: () async {
-                await dataService.removeId(
-                    token, project, collection, appid, transaction.id);
-                fetchTransactions(); // Refresh the list
-                Navigator.pop(context);
-              },
-              child: Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-            TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(context); // Tutup edit dialog
+                _showDetailTransactionDialog(
+                    context, transaction); // Kembali ke tampilan detail
               },
               child: Text('Cancel'),
             ),
@@ -705,6 +870,8 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
+
+  //EDIT==========================================
 }
 
 class FilterButton extends StatelessWidget {
@@ -745,6 +912,7 @@ class FilterButton extends StatelessWidget {
   }
 }
 
+//SARRAH SIDE =============================================
 class TransactionItemWidget extends StatelessWidget {
   final KeuanganModel transaction;
   final VoidCallback onTap;
@@ -782,6 +950,7 @@ class TransactionItemWidget extends StatelessWidget {
             ),
           ],
         ),
+        //=====================================================================
         child: Row(
           children: [
             Icon(
@@ -822,6 +991,7 @@ class TransactionItemWidget extends StatelessWidget {
             ),
           ],
         ),
+        //======================================================
       ),
     );
   }
